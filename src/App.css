@@ -1,0 +1,22 @@
+.App {
+}
+textarea {
+    /* Firefox */
+    scrollbar-width: none;
+    /* IE 10+ / Edge */
+    -ms-overflow-style: none;
+    /* Safari/Chrome (需配合JS降级) */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+.chat-report-container {
+    /* Firefox */
+    scrollbar-width: none;
+    /* IE 10+ / Edge */
+    -ms-overflow-style: none;
+    /* Safari/Chrome (需配合JS降级) */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

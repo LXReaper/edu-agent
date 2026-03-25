@@ -1,0 +1,18 @@
+#hero-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80%;
+    z-index: 0; /* 放置在最底层 */
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #06b6d4;
+    border-radius: 3px;
+}

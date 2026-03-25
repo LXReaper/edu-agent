@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": [
+      "dom",         // 包含浏览器 DOM 相关的类型，这是关键！
+      "dom.iterable",
+      "es2020"       // 确保使用现代 ES 语法
+    ],
+  }
+}

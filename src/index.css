@@ -1,0 +1,129 @@
+:root {
+  /*font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;*/
+  /*line-height: 1.5;*/
+  /*font-weight: 400;*/
+
+  /*color-scheme: light dark;*/
+  /*color: rgba(255, 255, 255, 0.87);*/
+  /*background-color: #242424;*/
+
+  /*font-synthesis: none;*/
+  /*text-rendering: optimizeLegibility;*/
+  /*-webkit-font-smoothing: antialiased;*/
+  /*-moz-osx-font-smoothing: grayscale;*/
+}
+body {
+  /** color **/
+  --border-color: #333;
+  --background-color: oklch(18.5% .005 285.823);
+  --foreground-color: oklch(98.5% 0 0);
+
+  --footer-background-color: #191919;
+  --footer-foreground-color: #fff;
+
+  --left-aside-background-color: oklch(15.5% .005 285.823);
+  --left-aside-foreground-color: #fff;
+
+  --foreground-hover-color: #fff;
+
+  --ok-button-color: #ddd;
+  --technology-button-color: #415fff;
+  --button-hover-color: #1e1e21;
+
+  --card-foreground-color: oklch(14.5% 0 0);
+
+  --input-border-color: oklch(98.5% 0 0);
+
+  /* dashboard color */
+  --dashboard-background-color: #1d1d1d;
+  --dashboard-foreground-color: #ccc;
+  --dashboard-text-board-color: #2f2f2f;
+
+  --dashboard-normal-button-color: #2f2f2f;
+  --dashboard-normal-button-hover-color: #2a2a2a;
+  --dashboard-ok-button-color: #121212;
+  --dashboard-ok-button-hover-color: #000;
+  --dashboard-ok-button-text-color: #fff;
+
+
+  /** size **/
+  --dashboard-left-aside-width: 308px;
+
+  --font-geist-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-geist-sans: "Geist", "Geist Fallback";
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-geist-sans);
+  background-color: var(--background-color);
+  margin: 0;
+}
+a {
+  text-decoration: inherit;
+}
+.hide-scrollbar {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0 !important; /* Chrome/Safari */
+}
+
+::selection {
+  background: rgba(126,181,253,.3); /* 选中背景色 */
+  color: unset;        /* 选中文字颜色 */
+}
+/*@media (prefers-color-scheme: light) {*/
+/*  :root {*/
+/*    color: #213547;*/
+/*    background-color: #ffffff;*/
+/*  }*/
+/*  a:hover {*/
+/*    color: #747bff;*/
+/*  }*/
+/*  button {*/
+/*    background-color: #f9f9f9;*/
+/*  }*/
+/*}*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .blue-gradient-text {
+    /* 文字蓝色渐变 */
+    background: linear-gradient(
+            to right,
+            theme('colors.blue.400'),
+            theme('colors.cyan.400'),
+            theme('colors.indigo.500')
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    /* 光晕扫描效果 */
+    position: relative;
+  }
+
+  .blue-gradient-text::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    background: linear-gradient(
+            to right,
+            transparent 40%,
+            rgba(147, 197, 253, 0.6) 50%,
+            transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: text-scan 3s linear infinite;
+    z-index: -1;
+    filter: blur(8px);
+  }
+
+  @keyframes text-scan {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+  }
+}

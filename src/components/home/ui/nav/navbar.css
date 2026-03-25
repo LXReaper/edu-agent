@@ -1,0 +1,45 @@
+.header {
+    position: sticky;
+    z-index: 50;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+    top: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.navbar {
+    color: var(--foreground-color);
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 80rem;
+    border-radius: 1rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+    box-shadow: none;
+    display: flex;
+    height: 56px;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .header {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 768px) {
+    .navbar {
+        padding: 1rem 1.75rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    .navbar {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
