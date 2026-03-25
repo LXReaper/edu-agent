@@ -1,5 +1,3 @@
-# Edu Agent
-
 # Edu Agent - 智能教学辅助系统
 
 ## 项目简介
