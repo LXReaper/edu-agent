@@ -6,6 +6,8 @@ export type AgentEventResponse = {
     curChatSessionHistoryId: number;
     // 当前聊天消息的父消息Id
     chatSessionHistoryRootId: number;
+    // 当前消息来自的子Agent的Id
+    agentId: string;
     // 当前聊天会话Id
     chatSessionId: string;
     userId: number;// 当前聊天的用户Id

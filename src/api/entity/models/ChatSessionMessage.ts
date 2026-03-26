@@ -11,6 +11,7 @@ export type ChatSessionMessage = {
     metadata?: any;// 特殊属性
     sequenceNumber: number;// 序列号
     chatSessionHistoryRootId?: number;// 当前聊天会话消息的父消息的id
+    agentId: string;// 当前消息的agentId
     createTime: Date;// 创建时间
     updateTime: Date;// 更新时间
 }

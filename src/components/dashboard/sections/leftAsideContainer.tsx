@@ -139,7 +139,7 @@ export const LeftAsideContainer: React.FC<LeftAsideContainerProps> = ({
                 </div>
                 {/*content box*/}
                 <div className={`w-full flex-1 flex-col justify-between flex`}>
-                    <div className={`flex-1 overflow-y-auto px-4`}>
+                    <div className={`flex-1 max-h-[80vh] overflow-y-auto overflow-x-hidden custom-scrollbar px-4`}>
                         {/*new chat*/}
                         <div className={`bg-[#5d9cf1]/[0.06] hover:bg-[#5d9cf1]/[0.12] active:bg-[#5d9cf1]/[0.18] mb-[6px] hidden h-10 cursor-pointer 
                             items-center justify-between rounded-[12px] border-[0.5px] border-[#3DAEFF29] pl-3 pr-4 md:flex`}>
@@ -153,45 +153,49 @@ export const LeftAsideContainer: React.FC<LeftAsideContainerProps> = ({
                             </div>
                         </div>
                         {/*chat info*/}
-                        <div className={`mb-[6px] flex min-h-[42px] flex-col overflow-hidden`}>
-                            {listContent.map((list, index) =>
-                                <div key={index}>
-                                    <nav
-                                        className={`hover:bg-[#252731]/[0.5] mb-[2px] flex h-10 w-full flex-shrink-0 cursor-pointer items-center rounded-[12px]`}
-                                        onClick={list.onClick}>
-                                        <div className={`flex w-full min-w-[calc(${CssVariableNames.dashboardLeftAsideWidth} - 56px)]
-                                            items-center justify-between md:px-3`}>
-                                            <div className={`flex gap-2`}>
-                                                {list.icon}
-                                                <div className={`text-col_text00 text-[15px] font-[500]`}>{list.navName}</div>
-                                            </div>
-                                            <div className={`transition duration-300`}>
-                                                {!list.isList && <ChevronDown />}
-                                                {list.isList && <ChevronUp />}
-                                            </div>
+                        {listContent.map((list) =>
+                            <div key={list.id} className={`mb-[6px] flex min-h-[42px] flex-col`}>
+                                <nav
+                                    className={`hover:bg-[#252731]/[0.5] mb-[2px] flex h-10 w-full flex-shrink-0 cursor-pointer items-center rounded-[12px]`}
+                                    onClick={list.onClick}>
+                                    <div className={`flex w-full min-w-[calc(${CssVariableNames.dashboardLeftAsideWidth} - 56px)]
+                                        items-center justify-between md:px-3`}>
+                                        <div className={`flex gap-2`}>
+                                            {list.icon}
+                                            <div className={`text-col_text00 text-[15px] font-[500]`}>{list.navName}</div>
                                         </div>
-                                    </nav>
-                                    {list.isList && <div className={``}>
-                                        {list.content.length <= 0 && <div
-                                            className={`flex h-[36px] items-center justify-center overflow-hidden pl-[10px] text-[#6b6b6f] text-[14px]`}>
+                                        <div className={`transition duration-300`}>
+                                            {!list.isList && <ChevronDown />}
+                                            {list.isList && <ChevronUp />}
+                                        </div>
+                                    </div>
+                                </nav>
+                                <div className={`relative w-full z-0`}>  {/* 添加 relative */}
+                                    {list.isList && list.content.length <= 0 && (
+                                        <div
+                                            className={`flex h-[36px] items-center justify-center overflow-hidden pl-[10px] text-[#6b6b6f] text-[14px]`}
+                                        >
                                             {list.emptyContent}
-                                        </div>}
-                                        {list.content.length > 0 && list.id === ListEnum.CHAT_HISTORY &&
-                                            list.content.map((chatSessionConfig: ChatSessionConfig, index) => (
+                                        </div>
+                                    )}
+                                    {list.isList && list.content.length > 0 && list.id === ListEnum.CHAT_HISTORY && (
+                                        <div className={`max-h-[80vh] overflow-y-auto custom-scrollbar relative z-0`}>  {/* 添加 relative 和 overflow-auto */}
+                                            {list.content.map((chatSessionConfig: ChatSessionConfig, idx) => (
                                                 <div
-                                                    key={index}
+                                                    key={chatSessionConfig.id || idx}
                                                     onClick={() => selectChatSessionIdDebounce(chatSessionConfig.id)}
                                                     className={`hover:bg-[#252731]/[0.2] active:bg-[#252731]/[0.3] px-3
                                                         ${getCurSelectChatSessionId() === chatSessionConfig.id ? "bg-[#252731]/[0.3]" : ""}
-                                                        mb-[2px] flex h-10 w-full flex-shrink-0 cursor-pointer items-center rounded-[12px]`}>
+                                                        mb-[2px] flex h-10 w-full flex-shrink-0 cursor-pointer items-center rounded-[12px] relative z-0`}  // 添加 relative
+                                                >
                                                     {chatSessionConfig?.title ?? ""}
                                                 </div>
-                                            ))
-                                        }
-                                    </div>}
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 {/*footer content*/}

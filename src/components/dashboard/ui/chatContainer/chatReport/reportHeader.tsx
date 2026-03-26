@@ -40,13 +40,16 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
                 </div>
             </header>
             {/* Task Objective */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-8">
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 text-blue-600">任务目标</h2>
-                <p className="text-lg text-slate-800 leading-relaxed font-medium">
-                    {getCurSelectAssistantMessagesInMessageContainer()
-                        .filter(assistantMessage => assistantMessage.eventType === AgentEventTypeEnum.TASK_REASONING)?.[0]?.content ?? "空"}
-                </p>
-            </div>
+            {!!getCurSelectAssistantMessagesInMessageContainer()
+                .filter(assistantMessage => assistantMessage.eventType === AgentEventTypeEnum.TASK_REASONING).length &&
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-8">
+                    <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 text-blue-600">任务目标</h2>
+                    <p className="text-lg text-slate-800 leading-relaxed font-medium">
+                        {getCurSelectAssistantMessagesInMessageContainer()
+                            .filter(assistantMessage => assistantMessage.eventType === AgentEventTypeEnum.TASK_REASONING)?.[0]?.content ?? "空"}
+                    </p>
+                </div>
+            }
         </div>
     )
 }

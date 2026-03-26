@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+import {motion} from "motion/react";
 import {
     AlertTriangle,
     CheckCircle2,
@@ -45,6 +46,7 @@ export const StepCard: React.FC<StepCardProps> = ({
             setIsOpen(true);
         }
     }, [status]);
+
     useEffect(() => {
         if (stepContainer && stepContainer.stepMessages && stepContainer.stepMessages.length) {
             const coreContentObj = JSON.parse(stepContainer.stepMessages[0].content) as AgentEventResponseCoreContent;
@@ -128,20 +130,97 @@ export const StepCard: React.FC<StepCardProps> = ({
                                     let successMessage = "工具 [" + toolResult.tool + "] 执行成功";
                                     switch (toolResult.tool) {
                                         case ToolNameTypeEnum.WEB_SEARCH: {
-                                            const aiSearchResponse = JSON.parse(toolResult.data) as BaiduAISearchResponse;
-                                            const references = aiSearchResponse.references;
-                                            return (
-                                                <div
-                                                    key={chatMessage.id}
-                                                    className="my-2 p-3 bg-emerald-500/10 border-l-4 border-emerald-400 rounded-r-md animate-in slide-in-from-left-2">
-                                                    <div className="flex items-center gap-2 text-emerald-300 mb-1">
-                                                        <Database size={14}/>
-                                                        <span
-                                                            className="text-xs font-bold uppercase tracking-tighter">执行结果 (Tool Result)</span>
+                                            try {
+                                                const aiSearchResponse = JSON.parse(toolResult.data) as BaiduAISearchResponse;
+                                                const references = aiSearchResponse.references;
+                                                return (
+                                                    <div
+                                                        key={chatMessage.id}
+                                                        className="my-2 p-3 bg-emerald-500/10 border-l-4 border-emerald-400 rounded-r-md animate-in slide-in-from-left-2">
+                                                        <div className="flex items-center gap-2 text-emerald-300 mb-1">
+                                                            <Database size={14}/>
+                                                            <span
+                                                                className="text-xs font-bold uppercase tracking-tighter">执行结果 (Tool Result)</span>
+                                                        </div>
+                                                        <details className="group">
+                                                            <summary
+                                                                className="cursor-pointer text-xs text-emerald-400 hover:text-emerald-300 mb-2 list-none">
+                                                                <motion.div
+                                                                    className="inline-flex items-center gap-2 cursor-pointer font-medium group-open:hidden"
+                                                                    animate={{
+                                                                        y: [0, 6, 0],
+                                                                        opacity: [0.6, 1, 0.6]
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: 2,
+                                                                        repeat: Infinity,
+                                                                        repeatType: "loop",
+                                                                        ease: "easeInOut",
+                                                                        // times 对应 animate 数组中每个值的生效时间点 (0 到 1)
+                                                                        times: [0, 0.5, 1]
+                                                                    }}
+                                                                >
+                                                                    <span className="text-sm">展开查看完整内容</span>
+                                                                    <span className="text-xs">▼</span>
+                                                                </motion.div>
+                                                                <div
+                                                                    className="hidden group-open:inline-block">▲ 收起内容
+                                                                </div>
+                                                            </summary>
+                                                            <div
+                                                                className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                                                                <BaiduSearchMessage searchResults={references}/>
+                                                            </div>
+                                                        </details>
                                                     </div>
-                                                    <BaiduSearchMessage searchResults={references} />
-                                                </div>
-                                            );
+                                                );
+                                            } catch (e) {
+                                                // 纯文本搜索结果
+                                                return (
+                                                    <div
+                                                        key={chatMessage.id}
+                                                        className="my-2 p-3 bg-emerald-500/10 border-l-4 border-emerald-400 rounded-r-md animate-in slide-in-from-left-2">
+                                                        <div className="flex items-center gap-2 text-emerald-300 mb-1">
+                                                            <Database size={14}/>
+                                                            <span
+                                                                className="text-xs font-bold uppercase tracking-tighter">执行结果 (Tool Result)</span>
+                                                        </div>
+                                                        <details className="group">
+                                                            <summary
+                                                                className="cursor-pointer text-xs text-emerald-400 hover:text-emerald-300 mb-2 list-none">
+                                                                <motion.div
+                                                                    className="inline-flex items-center gap-2 cursor-pointer font-medium group-open:hidden"
+                                                                    animate={{
+                                                                        y: [0, 6, 0],
+                                                                        opacity: [0.6, 1, 0.6]
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: 2,
+                                                                        repeat: Infinity,
+                                                                        repeatType: "loop",
+                                                                        ease: "easeInOut",
+                                                                        // times 对应 animate 数组中每个值的生效时间点 (0 到 1)
+                                                                        times: [0, 0.5, 1]
+                                                                    }}
+                                                                >
+                                                                    <span className="text-sm">展开查看完整内容</span>
+                                                                    <span className="text-xs">▼</span>
+                                                                </motion.div>
+                                                                <div
+                                                                    className="hidden group-open:inline-block">▲ 收起内容
+                                                                </div>
+                                                            </summary>
+                                                            <div
+                                                                className={`
+                                                                text-[${CssVariableNames.dashBoardTextBoardColor}]
+                                                                max-h-[200px] overflow-y-auto custom-scrollbar
+                                                                `}>
+                                                                {toolResult.data}
+                                                            </div>
+                                                        </details>
+                                                    </div>
+                                                )
+                                            }
                                         }
                                         case ToolNameTypeEnum.CREATE_RICH_PPT: {
                                             const slideInfo = JSON.parse(toolResult.data) as SlideInfo;
@@ -149,7 +228,7 @@ export const StepCard: React.FC<StepCardProps> = ({
                                                 <div
                                                     key={chatMessage.id}
                                                     className="my-2 p-3 bg-emerald-500/10 border-l-4 border-emerald-400 rounded-r-md animate-in slide-in-from-left-2">
-                                                    <div className="flex items-center gap-2 text-emerald-300 mb-1">
+                                                <div className="flex items-center gap-2 text-emerald-300 mb-1">
                                                         <Database size={14}/>
                                                         <span
                                                             className="text-xs font-bold uppercase tracking-tighter">执行结果 (Tool Result)</span>

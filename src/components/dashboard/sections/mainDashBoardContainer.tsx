@@ -333,7 +333,7 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
                         content: JSON.stringify({
                             stepProgressId: agentEventResponseCoreContent.stepProgressId,
                             content: JSON.stringify(todoStep),
-                            message: agentEventResponseCoreContent.stepProgressId,
+                            message: agentEventResponseCoreContent.message,
                         } as AgentEventResponseCoreContent),
                         eventType: AgentEventTypeEnum.STEP_PROGRESS,
                         sequenceNumber: eventDate.getTime(),
@@ -476,7 +476,7 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
                     />
                 )}
             </div>
-            {curReportStepsInfoStore.getStepsContainerLength() > 0 && !showReport &&
+            {curReportStepsInfoStore.getAgentsStepsContainerLength() > 0 && !showReport &&
                 <motion.div
                     initial={{
                         opacity: 0,

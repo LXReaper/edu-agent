@@ -41,30 +41,31 @@ export const StepFlowContainer: React.FC<StepFlowContainerProps> = ({
 
     return (
         <>
-            {store.getStepsContainerLength() > 0 ?
+            {store.getAgentsStepsContainerLength() > 0 ?
                 <div className="font-sans text-slate-900">
                     <div className="max-w-3xl mx-auto">
                         {/* Timeline Area */}
                         <div className="relative border-l-2 border-slate-200 ml-3 pl-8 space-y-2">
-                            {[...Array(store.getStepsContainerLength()).keys()].map((idx) => {
-                                const stepContainer = store.getSteps(idx);
-                                return (
-                                    <div key={idx} className="relative group">
-                                        {/* Timeline dot */}
-                                        <div
-                                            className={`absolute -left-[41px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-md z-10 transition-all duration-500 ${
-                                                stepContainer.status === StepsStatusEnum.DONE ? 'bg-green-500' :
-                                                    stepContainer.status === StepsStatusEnum.ERROR ? 'bg-red-500' :
-                                                        stepContainer.status === StepsStatusEnum.RESTARTED ? 'bg-orange-500' :
-                                                            'bg-blue-500 scale-110'
-                                            }`}/>
-                                        <StepCard
-                                            stepContainer={stepContainer}
-                                            status={stepContainer.status}
-                                            isWorking={stepContainer.status === StepsStatusEnum.RUNNING || stepContainer.status === StepsStatusEnum.RESTARTED}
-                                        />
-                                    </div>
-                                )
+                            {[...Array(store.getAgentsStepsContainerLength()).keys()].map((idx) => {
+                                return store.getAgentSteps(idx).map((stepContainer, index) => {
+                                    return (
+                                        <div className="relative group">
+                                            {/* Timeline dot */}
+                                            <div
+                                                className={`absolute -left-[41px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-md z-10 transition-all duration-500 ${
+                                                    stepContainer.status === StepsStatusEnum.DONE ? 'bg-green-500' :
+                                                        stepContainer.status === StepsStatusEnum.ERROR ? 'bg-red-500' :
+                                                            stepContainer.status === StepsStatusEnum.RESTARTED ? 'bg-orange-500' :
+                                                                'bg-blue-500 scale-110'
+                                                }`}/>
+                                            <StepCard
+                                                stepContainer={stepContainer}
+                                                status={stepContainer.status}
+                                                isWorking={stepContainer.status === StepsStatusEnum.RUNNING || stepContainer.status === StepsStatusEnum.RESTARTED}
+                                            />
+                                        </div>
+                                    )
+                                });
                             })}
                             <div ref={logEndRef} className="h-10"/>
                         </div>

@@ -32,6 +32,7 @@ Edu Agent 是一个基于 AI Agent 架构的智能教学辅助系统，专注于
 - React 18.x
 - TypeScript
 - TailwindCSS / Ant Design / lucide-react
+- zustand
 - Vite 构建工具
 - Axios 网络请求
 
