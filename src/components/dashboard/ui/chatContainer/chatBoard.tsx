@@ -4,7 +4,7 @@ import {CssVariableNames} from "../../../../lib";
 import {AssistantChatMessage} from "./chatBoard/assistantChatMessage.tsx";
 import type {ChatSessionMessage} from "../../../../api/entity/models/ChatSessionMessage.ts";
 import {LLMMessageRoleEnum} from "../../../../api/entity/enums/LLMMessageRoleEnum.ts";
-import {useCurChatSessionMessagesStore} from "../../../store/useCurChatSessionMessagesStore.tsx";
+import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../../store/useCurChatSessionMessagesStore.tsx";
 
 export interface ChatBoardRef {
     scrollToBottom: (behavior?: 'smooth' | 'auto') => void;
@@ -64,6 +64,21 @@ export const ChatBoard: forwardRef<ChatBoardRef, ChatBoardProps> = ({
             scrollToBottom('smooth');
         }
     }, [newMessage]);
+    const LoadingPulse = () => {
+        if (!useIsButtonDisabled()) return <></>;
+        return (
+            <div className="flex items-center space-x-1.5 px-4 py-3 rounded-2xl rounded-tl-none w-fit transition-all animate-in fade-in slide-in-from-left-2">
+                <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-700 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                </div>
+                <span className="text-xs font-medium text-gray-300 dark:text-slate-500 ml-2 animate-pulse">
+                    AI 正在思考...
+                </span>
+            </div>
+        );
+    };
 
     return (
         <div
@@ -84,6 +99,7 @@ export const ChatBoard: forwardRef<ChatBoardRef, ChatBoardProps> = ({
                     </div>
                 )
             })}
+            <LoadingPulse />
             <div ref={logEndRef} className="h-10"/>
         </div>
     )

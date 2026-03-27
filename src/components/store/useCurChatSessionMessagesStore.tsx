@@ -258,3 +258,17 @@ export const useCurChatSessionMessagesStore = create<State & Action>((setState, 
         messageContainerList: [],
     }))
 }));
+
+export const useIsButtonDisabled = () => {
+    return useCurChatSessionMessagesStore((state) => {
+        const list = state?.messageContainerList;
+        if (!list || list.length === 0) return true;
+
+        const lastAssistantMessages = list[list.length - 1].assistantMessages;
+        const successCount = lastAssistantMessages.filter(
+            msg => msg.eventType === AgentEventTypeEnum.SUCCESS
+        ).length;
+
+        return successCount <= 0;
+    });
+};

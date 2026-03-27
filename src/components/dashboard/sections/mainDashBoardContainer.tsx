@@ -14,7 +14,7 @@ import {useAlertMessage} from "../../../hooks/AlertContext.tsx";
 import {LLMMessageRoleEnum} from "../../../api/entity/enums/LLMMessageRoleEnum.ts";
 import type {ChatSessionMessage} from "../../../api/entity/models/ChatSessionMessage.ts";
 import type {AgentEventResponseCoreContent} from "../../../api/entity/AgentEventResponseCoreContent.ts";
-import {useCurChatSessionMessagesStore} from "../../store/useCurChatSessionMessagesStore.tsx";
+import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../store/useCurChatSessionMessagesStore.tsx";
 import {useCurReportStepsInfoStore} from "../../store/useCurReportStepsInfoStore.tsx";
 import {debounce} from "../../../utils/debounceThrottle.ts";
 import {useAllChatSessionStore} from "../../store/useAllChatSessionStore.tsx";
@@ -88,12 +88,13 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
         setShowReport(isShow);
     }
     const setShowStepsReportDebounce = debounce(setShowStepsReport, 300);
+    const isButtonDisable = useIsButtonDisabled();
 
     // 在输入框中按下enter键触发的事件
     const enterLaunchEvent = async () => {
         const query = inputValue;
         setInputValue("");// 暂时清空文本框中的内容
-        if (!query) return;
+        if (!query || isButtonDisable) return;
 
         // todo userId和chatSessionId会保存在前端
         let userId = 1;
@@ -106,7 +107,7 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
             sequenceNumber: -1,
             createTime: new Date(),
             updateTime: new Date(),
-        }
+        } as ChatSessionMessage;
         setNewMessage(userMessage);// 先设置用户消息
         store.addUserMessageInMessageContainerList(userMessage);// 初始化当前对话
 

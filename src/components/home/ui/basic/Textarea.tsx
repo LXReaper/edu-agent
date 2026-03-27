@@ -43,7 +43,7 @@ export const Textarea = ({
         }
     };
     return (
-        <div className="flex flex-col gap-1 px-2">
+        <div className="flex flex-col gap-1 px-2 py-1">
             <textarea data-slot="textarea"
                 className={`border-[${CssVariableNames.inputBorderColor}] flex rounded-md border scrollbar-hide
                     py-2 outline-none border-none text-[${CssVariableNames.foregroundColor}]

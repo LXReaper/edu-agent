@@ -1,7 +1,6 @@
 import {Clock, Loader2} from "lucide-react";
 import React from "react";
 import moment from "moment";
-import {ChatReportExeState} from "../../../../../type";
 import {useCurChatSessionMessagesStore} from "../../../../store/useCurChatSessionMessagesStore.tsx";
 import {AgentEventTypeEnum} from "../../../../../api/entity/enums/AgentEventTypeEnum.ts";
 

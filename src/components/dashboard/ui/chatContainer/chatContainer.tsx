@@ -2,10 +2,11 @@ import {CssVariableNames, themeConfig} from "../../../../lib";
 import {Textarea} from "../../../home/ui/basic/Textarea.tsx";
 import React, {useEffect, useRef} from "react";
 import {motion} from "motion/react";
-import {Paperclip, Rocket} from "lucide-react";
+import {Paperclip, Send} from "lucide-react";
 import {ChatBoard} from "./chatBoard.tsx";
 import type {ChatSessionMessage} from "../../../../api/entity/models/ChatSessionMessage.ts";
-import {useCurChatSessionMessagesStore} from "../../../store/useCurChatSessionMessagesStore.tsx";
+import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../../store/useCurChatSessionMessagesStore.tsx";
+import {AgentEventTypeEnum} from "../../../../api/entity/enums/AgentEventTypeEnum.ts";
 
 interface ChatContainerProps {
     setShowStepsReport: (isShow: boolean, index: number) => void;
@@ -40,6 +41,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     const chatTitle = "Hello! My Master";
 
     const {getMessageContainerListLength} = useCurChatSessionMessagesStore();
+
     const adjustTextareaHeight = () => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
@@ -111,11 +113,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 if (!filesInput) return;
                                 filesInput.click();
                             }} className={`cursor-pointer`} height={20} width={20}/>
-                            <input ref={filesInputRef} className={`hidden`} type={`file`} multiple />
+                            <input ref={filesInputRef} className={`hidden`} type={`file`} multiple/>
                         </div>
-                        <div>
-                            <Rocket className={`cursor-pointer`} onClick={enterLaunchEvent} height={20} width={20}/>
-                        </div>
+                        <button
+                            onClick={enterLaunchEvent}
+                            disabled={useIsButtonDisabled()}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 disabled:bg-gray-300 dark:disabled:bg-slate-800 disabled:cursor-not-allowed transition-all shadow-md"
+                        >
+                            <Send size={18}/>
+                        </button>
                     </div>
                 </div>
             </motion.div>
