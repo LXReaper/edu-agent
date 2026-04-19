@@ -10,6 +10,19 @@ export class AgentController {
     // 使用 Map 存储每个调用的重试计数
     private static readonly MAX_RETRIES = 3;
     private static abortController: AbortController | null = null;
+
+    public static createChatSession = async (
+        chatRequest: ChatRequest
+    ) => {
+        try {
+            const response = await basicRequest.post(agentPath + "/chat/session/create", chatRequest)
+            return response.data.data;
+        } catch (error) {
+            console.error('请求创建聊天会话失败:', error);
+            return [];
+        }
+    }
+
     public static callLLM = async (
         request: ChatRequest,
         onmessage: (agentEventResponse: AgentEventResponse) => void,
@@ -121,6 +134,7 @@ export class AgentController {
             curChatSessionHistoryId: data.curChatSessionHistoryId,
             chatSessionHistoryRootId: data.chatSessionHistoryRootId,
             chatSessionId: data.chatSessionId,
+            agentId: data.agentId,
             userId: data.userId,
             eventType: data.eventType,
             message: data.message,

@@ -6,15 +6,11 @@ import {Paperclip, Send} from "lucide-react";
 import {ChatBoard} from "./chatBoard.tsx";
 import type {ChatSessionMessage} from "../../../../api/entity/models/ChatSessionMessage.ts";
 import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../../store/useCurChatSessionMessagesStore.tsx";
-import {AgentEventTypeEnum} from "../../../../api/entity/enums/AgentEventTypeEnum.ts";
 
 interface ChatContainerProps {
     setShowStepsReport: (isShow: boolean, index: number) => void;
 
     maxHeight: string;// 最大高度
-
-    inputValue: string;// 输入框中的内容
-    setInputValue: (newInputValue: string) => void;// 修改输入框内容的函数
 
     enterLaunchEvent: () => void;// 在输入框中按下enter键触发的事件
 
@@ -24,9 +20,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     setShowStepsReport,
 
     maxHeight,
-
-    inputValue,
-    setInputValue,
 
     enterLaunchEvent,
 
@@ -40,7 +33,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
     const chatTitle = "Hello! My Master";
 
-    const {getMessageContainerListLength} = useCurChatSessionMessagesStore();
+    const {getMessageContainerListLength, inputChatText, getCurChatInputText} = useCurChatSessionMessagesStore();
 
     const adjustTextareaHeight = () => {
         if (textareaRef.current) {
@@ -49,9 +42,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         }
     }
 
+    const curChatInputText = getCurChatInputText();
     useEffect(() => {
         adjustTextareaHeight();
-    }, [inputValue]);
+    }, [curChatInputText]);
 
     return (
         <div className={`relative flex flex-col items-center justify-center justify-between h-[${maxHeight}] max-h-[${maxHeight}]`}>
@@ -97,12 +91,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                         ref={textareaRef}
                         className={`resize-none bg-[${CssVariableNames.dashBoardTextBoardColor}] min-h-[60px] max-h-[20vh]`}
                         placeholder={`What Can I do for you?`}
-                        value={inputValue}
-                        setInputValue={setInputValue}
+                        value={curChatInputText}
+                        setInputValue={inputChatText}
                         enterLaunchEvent={enterLaunchEvent}
                         onChange={(event) => {
                             adjustTextareaHeight();
-                            setInputValue(event.target.value);
+                            inputChatText(event.target.value);
                         }}
                         onWheel={(e) => e.nativeEvent.stopImmediatePropagation()}
                     />

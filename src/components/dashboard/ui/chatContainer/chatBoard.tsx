@@ -4,7 +4,8 @@ import {CssVariableNames} from "../../../../lib";
 import {AssistantChatMessage} from "./chatBoard/assistantChatMessage.tsx";
 import type {ChatSessionMessage} from "../../../../api/entity/models/ChatSessionMessage.ts";
 import {LLMMessageRoleEnum} from "../../../../api/entity/enums/LLMMessageRoleEnum.ts";
-import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../../store/useCurChatSessionMessagesStore.tsx";
+import {useCurChatSessionMessagesStore} from "../../../store/useCurChatSessionMessagesStore.tsx";
+import {AgentEventTypeEnum} from "../../../../api/entity/enums/AgentEventTypeEnum.ts";
 
 export interface ChatBoardRef {
     scrollToBottom: (behavior?: 'smooth' | 'auto') => void;
@@ -25,7 +26,7 @@ export const ChatBoard: forwardRef<ChatBoardRef, ChatBoardProps> = ({
 
     const containerRef = useRef<HTMLDivElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
-    const {getMessageContainerListLength, getMessageContainerList} = useCurChatSessionMessagesStore();
+    const {getMessageContainerListLength, getMessageContainerList, getAssistantMessagesInLastMessageContainer} = useCurChatSessionMessagesStore();
 
     // 滚动到底部的方法
     const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
@@ -65,7 +66,9 @@ export const ChatBoard: forwardRef<ChatBoardRef, ChatBoardProps> = ({
         }
     }, [newMessage]);
     const LoadingPulse = () => {
-        if (!useIsButtonDisabled()) return <></>;
+        const assistantMessages = getAssistantMessagesInLastMessageContainer();
+        if (!assistantMessages || assistantMessages.length <= 0
+            || assistantMessages[assistantMessages.length - 1].eventType === AgentEventTypeEnum.SUCCESS) return <></>;
         return (
             <div className="flex items-center space-x-1.5 px-4 py-3 rounded-2xl rounded-tl-none w-fit transition-all animate-in fade-in slide-in-from-left-2">
                 <div className="flex space-x-1">

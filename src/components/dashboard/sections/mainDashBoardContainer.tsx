@@ -6,22 +6,15 @@ import {CssVariableNames} from "../../../lib";
 import {ChatContainer} from "../ui/chatContainer/chatContainer.tsx";
 import {ChatReportContainer} from "../ui/chatContainer/chatReportContainer.tsx";
 import {AutoAnimatedRobot} from "../ui/icons/autoAnimatedRobot.tsx";
-import {AgentController} from "../../../api/AgentController.ts";
-import type {AgentEventResponse} from "../../../api/entity/response/AgentEventResponse.ts";
-import {AgentEventTypeEnum} from "../../../api/entity/enums/AgentEventTypeEnum.ts";
-import {LLMProviderEnum} from "../../../api/entity/enums/LLMProviderEnum.ts";
 import {useAlertMessage} from "../../../hooks/AlertContext.tsx";
-import {LLMMessageRoleEnum} from "../../../api/entity/enums/LLMMessageRoleEnum.ts";
 import type {ChatSessionMessage} from "../../../api/entity/models/ChatSessionMessage.ts";
-import type {AgentEventResponseCoreContent} from "../../../api/entity/AgentEventResponseCoreContent.ts";
 import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../store/useCurChatSessionMessagesStore.tsx";
 import {useCurReportStepsInfoStore} from "../../store/useCurReportStepsInfoStore.tsx";
 import {debounce} from "../../../utils/debounceThrottle.ts";
 import {useAllChatSessionStore} from "../../store/useAllChatSessionStore.tsx";
 import {useMatch} from "react-router-dom";
-import type {ToolResult} from "../../../api/entity/ToolResult.ts";
-import {ToolNameTypeEnum} from "../../../api/entity/enums/ToolNameTypeEnum.ts";
-import type {SlideInfo} from "../../../api/entity/tools/SlideInfo.ts";
+import {AgentController} from "../../../api/AgentController.ts";
+import {LLMProviderEnum} from "../../../api/entity/enums/LLMProviderEnum.ts";
 import {usePPTXInfo} from "../../store/usePPTXInfo.tsx";
 
 interface MainDashBoardContainerProps {
@@ -34,6 +27,7 @@ interface MainDashBoardContainerProps {
     setShowReport: (isShow: boolean) => void;
 }
 
+const RESTORE_INVOKE_KEY = "restore-invoke-agent";
 export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
     leftAsideIsExpand,
     setLeftAsideIsExpand,
@@ -47,37 +41,48 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
     const matchPath = useMatch(GlobalRouterPath.DASHBOARD_DETAIL);
 
     const [chatSessionId, setChatSessionId] = useState(matchPath?.params?.id ?? "");
+    const [restoreInvokeAgent, setRestoreInvokeAgent] = useState(false);
 
     const [newMessage, setNewMessage] = useState<ChatSessionMessage>(null);
 
-    const {selectCurSelectChatSessionId} = useAllChatSessionStore();
-    const store = useCurChatSessionMessagesStore.getState?.();
+    const {selectCurSelectChatSessionId, invokeAgent} = useAllChatSessionStore();
+    const {
+        clearMessageContainerList, initMessageContainerList,
+        setNewCurSelectMessageContainerIndex, getCurSelectAssistantMessagesInMessageContainer,
+        getCurChatInputText, inputChatText, addUserMessageInMessageContainerList,
+        updateAssistantMessagesInLastMessageContainer, getAssistantMessagesInLastMessageContainer,
+        updateStepProgressMessageContentByStepProgressId,
+        getLastStepProgressMessageInLastMessageContainer, updateStepProgressMessageContentDoneState
+    } = useCurChatSessionMessagesStore();
     const curReportStepsInfoStore = useCurReportStepsInfoStore.getState?.();
     const {updatePPTXPreviewContainerIfEqualProjectId} = usePPTXInfo();
 
     const [reportTime, setReportTime] = useState<Date>(new Date());
-
-    // chatContainer输入框中输入的内容
-    const [inputValue, setInputValue] = useState("");
 
     const maxHeight = "90vh";
 
     useEffect(() => {
         const tempChatSessionId = matchPath?.params?.id ?? "";
         setChatSessionId(tempChatSessionId);
-        store.clearMessageContainerList();
+        clearMessageContainerList();
         if (tempChatSessionId) {// 选中这个chatSessionId
             const selectSuccess = selectCurSelectChatSessionId(tempChatSessionId);
             if (selectSuccess) {
-                store.clearMessageContainerList();
-                store.initMessageContainerList(tempChatSessionId);
+                clearMessageContainerList();
+                initMessageContainerList(tempChatSessionId);
             }
         }
+
+        setTimeout(() => {
+            // 如果之前调用enterLaunchEvent函数没有结束，这里可以续上
+            const restoreInvokeValue = localStorage.getItem(RESTORE_INVOKE_KEY);
+            if (restoreInvokeValue) enterLaunchEvent();
+        }, 200);
     }, []);
 
     const setShowStepsReport = (isShow, index) => {
-        store.setNewCurSelectMessageContainerIndex(index);
-        const messages = store.getCurSelectAssistantMessagesInMessageContainer();
+        setNewCurSelectMessageContainerIndex(index);
+        const messages = getCurSelectAssistantMessagesInMessageContainer();
         if (messages && messages.length) {
             curReportStepsInfoStore.clearStepsContainer();
             for (const message of messages) {
@@ -92,347 +97,47 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
 
     // 在输入框中按下enter键触发的事件
     const enterLaunchEvent = async () => {
-        const query = inputValue;
-        setInputValue("");// 暂时清空文本框中的内容
-        if (!query || isButtonDisable) return;
+        let query = getCurChatInputText(), provider = LLMProviderEnum.DEEP_SEEK, chatId = chatSessionId;
+        if (!chatSessionId) {
+            const newChatSessionId = await AgentController.createChatSession({
+                query: query,
+                provider: provider,
+                chatSessionId: chatId,
+            });
+            localStorage.setItem(RESTORE_INVOKE_KEY, JSON.stringify({
+                query: query,
+                provider: provider,
+                chatSessionId: newChatSessionId,
+            }));
+            window.open(GlobalRouterPath.DASHBOARD + "/" + newChatSessionId, "_self");
+            return;
+        }
+        const restoreInvokeValue = localStorage.getItem(RESTORE_INVOKE_KEY);
+        if (restoreInvokeValue) {
+            const invokeData = JSON.parse(restoreInvokeValue);
+            query = invokeData.query;
+            provider = invokeData.provider;
+            chatId = invokeData.chatSessionId;
+        }
+        localStorage.removeItem(RESTORE_INVOKE_KEY);
+        invokeAgent(
+            query, inputChatText,
+            isButtonDisable, chatId, provider,
+            setNewMessage,
+            addUserMessageInMessageContainerList,
+            (newChatSessionId: string) => {
+                setChatSessionId(newChatSessionId);
+            },
+            setReportTime,
+            updateAssistantMessagesInLastMessageContainer,
+            getAssistantMessagesInLastMessageContainer,
+            updatePPTXPreviewContainerIfEqualProjectId,
+            updateStepProgressMessageContentByStepProgressId,
 
-        // todo userId和chatSessionId会保存在前端
-        let userId = 1;
-        const userMessage = {
-            id: -1,
-            sessionId: chatSessionId,
-            userId: userId,
-            messageRole: LLMMessageRoleEnum.USER,
-            content: query,
-            sequenceNumber: -1,
-            createTime: new Date(),
-            updateTime: new Date(),
-        } as ChatSessionMessage;
-        setNewMessage(userMessage);// 先设置用户消息
-        store.addUserMessageInMessageContainerList(userMessage);// 初始化当前对话
-
-        await AgentController.callLLM({
-            query: query,
-            provider: LLMProviderEnum.DEEP_SEEK,
-            chatSessionId: chatSessionId,
-        }, (agentEventResponse: AgentEventResponse) => {
-            const chatMessageId=  agentEventResponse.curChatSessionHistoryId;
-            const chatRootMessageId=  agentEventResponse.chatSessionHistoryRootId;
-            setChatSessionId(agentEventResponse.chatSessionId);
-            userId = agentEventResponse.userId;
-            const eventType = agentEventResponse.eventType;
-            const message = agentEventResponse.message;
-            const content = agentEventResponse.content;
-            const todoStep = agentEventResponse.todoStep;
-            const eventDate = agentEventResponse.eventDate;
-
-            let tempMessage = null;
-            setReportTime(eventDate);// 设置当前报告的时间
-            switch (eventType) {
-                case AgentEventTypeEnum.THINKING: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            content: todoStep ? JSON.stringify(todoStep) : null,
-                            message: message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break ;
-                }
-                case AgentEventTypeEnum.THINKING_DONE: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            content: todoStep ? JSON.stringify(todoStep) : null,
-                            message: message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break ;
-                }
-                case AgentEventTypeEnum.SKILLS_NEEDED: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: content,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break ;
-                }
-                case AgentEventTypeEnum.TASK_REASONING: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: content,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break ;
-                }
-                case AgentEventTypeEnum.TODO_STEP_GET: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: content,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_START: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            content: JSON.stringify(todoStep),
-                            message: message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_RESTART: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            content: JSON.stringify(todoStep),
-                            message: message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.TOOL_CALL: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.TOOL,
-                        content: message,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.TOOL_RESULT: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.TOOL,
-                        content: content,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-
-                    const toolResult = JSON.parse(content) as ToolResult;
-                    switch (toolResult.tool) {
-                        case ToolNameTypeEnum.CREATE_RICH_PPT: {
-                            const slideInfo = JSON.parse(toolResult.data) as SlideInfo;
-                            const assistantMessages = store.getAssistantMessagesInLastMessageContainer();
-                            let isContainCurPPT = false;// 是否已经有同一个projectId的ppt信息
-                            for (let i = assistantMessages.length - 1; i >= 0; --i) {
-                                if (assistantMessages[i].eventType !== AgentEventTypeEnum.TOOL_RESULT) continue;
-                                const tempResult = JSON.parse(assistantMessages[i].content) as ToolResult;
-                                if (tempResult.tool !== ToolNameTypeEnum.CREATE_RICH_PPT) continue;
-                                const tempSlideInfo = JSON.parse(tempResult.data) as SlideInfo;
-                                if (tempSlideInfo.projectId === slideInfo.projectId) {
-                                    isContainCurPPT = true;
-                                    break;
-                                }
-                            }
-                            if (isContainCurPPT) {
-                                updatePPTXPreviewContainerIfEqualProjectId(slideInfo.projectId);
-                            } else {
-                                setNewMessage(tempMessage);
-                                store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                            }
-                            break;
-                        }
-                        default: {
-                            setNewMessage(tempMessage);
-                            store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                            break;
-                        }
-
-                    }
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_PROGRESS: {
-                    const agentEventResponseCoreContent = JSON.parse(content) as AgentEventResponseCoreContent;
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            stepProgressId: agentEventResponseCoreContent.stepProgressId,
-                            content: JSON.stringify(todoStep),
-                            message: agentEventResponseCoreContent.message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: AgentEventTypeEnum.STEP_PROGRESS,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    store.updateStepProgressMessageContentByStepProgressId(tempMessage);
-                    setNewMessage(store.getLastStepProgressMessageInLastMessageContainer());
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_PROGRESS_ERROR: {
-                    const agentEventResponseCoreContent = JSON.parse(content) as AgentEventResponseCoreContent;
-                    showAlert({
-                        message: agentEventResponseCoreContent.message,
-                        type: "error",
-                    }, 2000);
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            ...agentEventResponseCoreContent,
-                            content: JSON.stringify(todoStep),
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    store.updateStepProgressMessageContentDoneState(agentEventResponseCoreContent.stepProgressId);
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_PROGRESS_DONE: {
-                    const agentEventResponseCoreContent = JSON.parse(content) as AgentEventResponseCoreContent;
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            stepProgressId: agentEventResponseCoreContent.stepProgressId,
-                            content: JSON.stringify(todoStep),
-                            message: agentEventResponseCoreContent.stepProgressId,
-                        } as AgentEventResponseCoreContent),
-                        eventType: AgentEventTypeEnum.STEP_PROGRESS_DONE,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    store.updateStepProgressMessageContentByStepProgressId(tempMessage);
-                    setNewMessage(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.STEP_DONE: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: JSON.stringify({
-                            content: JSON.stringify(todoStep),
-                            message: message,
-                        } as AgentEventResponseCoreContent),
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-                case AgentEventTypeEnum.SUCCESS: {
-                    tempMessage = {
-                        id: chatMessageId,
-                        sessionId: chatSessionId,
-                        userId: userId,
-                        messageRole: LLMMessageRoleEnum.ASSISTANT,
-                        content: content,
-                        eventType: eventType,
-                        sequenceNumber: eventDate.getTime(),
-                        chatSessionHistoryRootId: chatRootMessageId,
-                        createTime: eventDate,
-                        updateTime: eventDate
-                    };
-                    setNewMessage(tempMessage);
-                    store.updateAssistantMessagesInLastMessageContainer(tempMessage);
-                    break;
-                }
-            }
-        })
+            getLastStepProgressMessageInLastMessageContainer,
+            showAlert,
+            updateStepProgressMessageContentDoneState
+        );
     }
 
     return (
@@ -463,7 +168,6 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
                     <ChatContainer
                         setShowStepsReport={setShowStepsReportDebounce}
                         maxHeight={maxHeight}
-                        inputValue={inputValue} setInputValue={setInputValue}
                         enterLaunchEvent={enterLaunchEvent}
                         newMessage={newMessage}
                     />
