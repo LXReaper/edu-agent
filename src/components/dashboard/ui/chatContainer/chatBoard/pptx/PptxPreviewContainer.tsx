@@ -558,6 +558,10 @@ export const PptxPreviewContainer = () => {
         updateSlideHTML,
     } = usePPTXInfo();
 
+    const edit = () => {
+        setIsEditing(!isEditing);
+    }
+
     const getCurrentPageIndex = useCallback(() => {
         const list = getPPTSlideDataList?.() || [];
         for (let i = 0; i < list.length; i++) {
@@ -611,8 +615,19 @@ export const PptxPreviewContainer = () => {
                 }
             }
         };
+
+        const handleKeyBoard = (event) => {
+            if (event.key === 'Escape') {
+                setIsFullScreen(false);
+            }
+        };
+
         window.addEventListener('message', handler);
-        return () => window.removeEventListener('message', handler);
+        window.addEventListener('keydown', handleKeyBoard);
+        return () => {
+            window.removeEventListener('message', handler);
+            window.removeEventListener('keydown', handleKeyBoard);
+        }
     }, [saveSnapshot, undo, redo]);
 
     // 打开编辑面板或切换页面时，重置历史并设置当前编辑 HTML
@@ -697,7 +712,7 @@ export const PptxPreviewContainer = () => {
                             <button onClick={() => setIsFullScreen(true)} className="p-2 hover:bg-white/10 rounded-full transition-all flex items-center gap-1 group text-emerald-400" title="全屏播放">
                                 <Play size={18} fill="currentColor" />
                             </button>
-                            <button onClick={() => setIsEditing(!isEditing)} className="p-2 hover:bg-white/10 rounded-full transition-all flex items-center gap-1 group" title={isEditing ? "退出编辑" : "编辑内容"}>
+                            <button onClick={() => edit()} className="p-2 hover:bg-white/10 rounded-full transition-all flex items-center gap-1 group" title={isEditing ? "退出编辑" : "编辑内容"}>
                                 <Edit size={18} className={isEditing ? "text-orange-400" : "group-hover:text-orange-400 transition-colors"} />
                             </button>
                             {isEditing && (

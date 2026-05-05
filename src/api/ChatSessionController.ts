@@ -31,6 +31,54 @@ export class ChatSessionController {
     }
 
     /**
+     * 删除会话
+     * @param chatSessionId
+     */
+    public static deleteSession = async (chatSessionId: string) => {
+        try {
+            const formData = new FormData();
+            formData.append('chatSessionId', chatSessionId);
+            const response = await basicRequest.post(chatSessionPath + "/delete", formData);
+
+            const res = response.data;
+            if (res.code !== 0) {
+                console.error("聊天会话" + chatSessionId + "删除失败");
+                return null;
+            }
+
+            return res.data;
+        } catch (error) {
+            console.error('请求删除聊天会话' + chatSessionId + '失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新当前聊天会话的标题
+     * @param chatSessionId
+     * @param newTitle
+     */
+    public static updateChatSessionTitle = async (chatSessionId: string, newTitle: string) => {
+        try {
+            const formData = new FormData();
+            formData.append('chatSessionId', chatSessionId);
+            formData.append('title', newTitle);
+            const response = await basicRequest.post(chatSessionPath + "/title/edit", formData);
+
+            const res = response.data;
+            if (res.code !== 0) {
+                console.error("聊天会话" + chatSessionId + "的标题更新失败");
+                return null;
+            }
+
+            return res.data;
+        } catch (error) {
+            console.error('请求更新聊天会话' + chatSessionId + '的标题失败:', error);
+            throw error;
+        }
+    }
+
+    /**
      *
      * @param chatSessionId
      */
@@ -112,6 +160,35 @@ export class ChatSessionController {
             return res.data;
         } catch (error) {
             console.error('请求获取当前聊天会话的消息内容失败:', error);
+            return null;
+        }
+    }
+
+    /**
+     * 搜索聊天会话
+     * @param keyword 搜索关键词（title或消息内容）
+     * @param page 页码，从0开始
+     * @param size 每页大小
+     */
+    public static search = async (keyword: string, page: number, size: number) => {
+        try {
+            const response = await basicRequest.get(chatSessionPath + "/search", {
+                params: {
+                    keyword: keyword,
+                    page: page,
+                    size: size,
+                }
+            } as any);
+
+            const res = response.data;
+            if (res.code !== 0) {
+                console.error("聊天会话搜索失败");
+                return null;
+            }
+
+            return res.data;
+        } catch (error) {
+            console.error('聊天会话搜索失败:', error);
             return null;
         }
     }

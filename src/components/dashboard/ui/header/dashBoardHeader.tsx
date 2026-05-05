@@ -1,19 +1,14 @@
 import {CssVariableNames, LocalStorageKeys, themeConfig} from "../../../../lib";
-import {Check, LaptopMinimal, Moon, PanelLeftOpen, Sun} from "lucide-react";
+import {Check, LaptopMinimal, Moon, Sun} from "lucide-react";
 import React from "react";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "../../../home/ui/toolTip.tsx";
 import {useBasicConfigStore} from "../../../store/useBasicConfigStore.tsx";
 import {applyTheme} from "../../../../utils";
 
 interface DashBoardHeaderProps {
-    leftAsideIsExpand: boolean;
-    setLeftAsideIsExpand: (leftAsideIsExpand: boolean) => void;
-
     setLoginModelIsOpen: (loginModelIsOpen: boolean) => void;
 }
 export const DashBoardHeader: React.FC<DashBoardHeaderProps> = ({
-    leftAsideIsExpand,
-    setLeftAsideIsExpand,
     setLoginModelIsOpen,
 }) => {
     const {setStyleVariable} = useBasicConfigStore();
@@ -29,15 +24,7 @@ export const DashBoardHeader: React.FC<DashBoardHeaderProps> = ({
         <header className={`z-[110] h-[54px] w-[100vw] overflow-hidden md:h-[60px]`}>
             <div
                 className={`h-full w-full flex items-center justify-between flex-1 bg-transparent pl-[8px] pr-[20px] shadow-none`}>
-                {/*left column of header*/}
-                <div className={`flex items-center`}>
-                    {!leftAsideIsExpand &&
-                        <div className={`flex cursor-pointer rounded-[5px] p-3 hover:bg-[#25262c]/[0.5] text-[${CssVariableNames.leftAsideForegroundColor}]`}
-                             onClick={() => setLeftAsideIsExpand(!leftAsideIsExpand)}>
-                            <PanelLeftOpen />
-                        </div>
-                    }
-                </div>
+                <div className={`flex items-center`}></div>
                 {/*right column of header*/}
                 <div className={`flex items-center gap-4`}>
                     <TooltipProvider>

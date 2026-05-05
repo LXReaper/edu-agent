@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from "react";
 import {motion} from "motion/react";
 import {DashBoardHeader} from "../ui/header/dashBoardHeader.tsx";
-import {AsideTransition, GlobalRouterPath, ValidStepMessageTypes} from "../../../constants";
-import {CssVariableNames} from "../../../lib";
+import {AsideTransition, GlobalRouterPath, siteConfig, ValidStepMessageTypes} from "../../../constants";
+import {CssVariableNames, themeConfig} from "../../../lib";
 import {ChatContainer} from "../ui/chatContainer/chatContainer.tsx";
 import {ChatReportContainer} from "../ui/chatContainer/chatReportContainer.tsx";
 import {AutoAnimatedRobot} from "../ui/icons/autoAnimatedRobot.tsx";
@@ -12,10 +12,12 @@ import {useCurChatSessionMessagesStore, useIsButtonDisabled} from "../../store/u
 import {useCurReportStepsInfoStore} from "../../store/useCurReportStepsInfoStore.tsx";
 import {debounce} from "../../../utils/debounceThrottle.ts";
 import {useAllChatSessionStore} from "../../store/useAllChatSessionStore.tsx";
-import {useMatch} from "react-router-dom";
+import {useMatch, useNavigate} from "react-router-dom";
 import {AgentController} from "../../../api/AgentController.ts";
 import {LLMProviderEnum} from "../../../api/entity/enums/LLMProviderEnum.ts";
 import {usePPTXInfo} from "../../store/usePPTXInfo.tsx";
+import {Edit, PanelLeftOpen, Search} from "lucide-react";
+import {useChatSessionSearchStore} from "../../store/useChatSessionSearchStore.tsx";
 
 interface MainDashBoardContainerProps {
     leftAsideIsExpand: boolean;
@@ -56,8 +58,10 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
     } = useCurChatSessionMessagesStore();
     const curReportStepsInfoStore = useCurReportStepsInfoStore.getState?.();
     const {updatePPTXPreviewContainerIfEqualProjectId} = usePPTXInfo();
+    const chatSessionSearchStore = useChatSessionSearchStore();
 
     const [reportTime, setReportTime] = useState<Date>(new Date());
+    const navigate = useNavigate();
 
     const maxHeight = "90vh";
 
@@ -140,6 +144,10 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
         );
     }
 
+    const navigateTo = (url: string, target = "_blank") => {
+        window.open(url, target);
+    };
+
     return (
         <motion.main
             animate={{
@@ -149,10 +157,35 @@ export const MainDashBoardContainer: React.FC<MainDashBoardContainerProps> = ({
             initial={{ marginLeft: leftAsideIsExpand ? CssVariableNames.dashboardLeftAsideWidth : 0 }}
             className={`relative flex flex-col h-[100vh] bg-[${CssVariableNames.dashboardBackgroundColor}]`}
         >
+            {/*left column of header*/}
+            {!leftAsideIsExpand &&
+                <div className={`absolute left-0 top-0 h-[100vh] p-1 bg-[${CssVariableNames.dashboardBackgroundColor}]
+                    border-r-2 border-r-[${themeConfig.currentTheme.includes(themeConfig.themes.light.id) ? "#ddd" : "#888"}]`}>
+                    <div className={`flex flex-col gap-[2vh]`}>
+                        <div className={`flex cursor-pointer items-center justify-center rounded-[5px] p-1`}
+                             onClick={() => navigate(GlobalRouterPath.HOME)}>
+                            <img className={`cursor-pointer`} height={30} width={30} src={siteConfig.logo}/>
+                        </div>
+                        <div
+                            className={`flex cursor-pointer items-center justify-center rounded-[5px] p-1 hover:bg-[#25262c]/[0.5] text-[${CssVariableNames.leftAsideForegroundColor}]`}
+                            onClick={() => setLeftAsideIsExpand(!leftAsideIsExpand)}>
+                            <PanelLeftOpen/>
+                        </div>
+                        <div
+                            className={`flex cursor-pointer items-center justify-center rounded-[5px] p-1 hover:bg-[#25262c]/[0.5] text-[${CssVariableNames.leftAsideForegroundColor}]`}
+                            onClick={() => chatSessionSearchStore.open()}>
+                            <Search/>
+                        </div>
+                        <div
+                            className={`flex cursor-pointer items-center justify-center rounded-[5px] p-1 hover:bg-[#25262c]/[0.5] text-[${CssVariableNames.leftAsideForegroundColor}]`}
+                            onClick={() => navigateTo(GlobalRouterPath.DASHBOARD, "_self")}>
+                            <Edit />
+                        </div>
+                    </div>
+                </div>
+            }
             {/*header Of dashboard*/}
             <DashBoardHeader
-                leftAsideIsExpand={leftAsideIsExpand}
-                setLeftAsideIsExpand={setLeftAsideIsExpand}
                 setLoginModelIsOpen={setLoginModelIsOpen}
             />
             <div className={`flex justify-center items-center w-[100vw]`}>

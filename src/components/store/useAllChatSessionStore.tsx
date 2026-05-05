@@ -45,8 +45,11 @@ type Action = {
     getCurSelectChatSessionId: () => string;
     queryChatSessionInfoList: () => void;
     getChatSessionInfoList: () => ChatSessionConfig[];
+    getChatSessionInfoLength: () => number;
     clearChatSessionInfoList: () => void;
 };
+
+const pageSizeStepSize = 25;// 页大小增加的步长
 
 export const useAllChatSessionStore = create<State & Action>(
     persist(
@@ -54,7 +57,7 @@ export const useAllChatSessionStore = create<State & Action>(
             curSelectChatSessionId: "",
             chatSessionInfoRequest: {
                 current: 1,
-                pageSize: 25,
+                pageSize: pageSizeStepSize,
             },
             chatSessionInfoList: [],
             invokeAgent: async (
@@ -442,6 +445,10 @@ export const useAllChatSessionStore = create<State & Action>(
                 const chatSessionConfigPage = await ChatSessionController.pageChatSession(state.chatSessionInfoRequest) as ChatSessionConfigPage;
                 setState(state1 => ({
                     ...state1,
+                    chatSessionInfoRequest: {
+                        current: 1,
+                        pageSize: Math.min(state1.chatSessionInfoRequest.pageSize + pageSizeStepSize, chatSessionConfigPage?.totalRow ?? state1.chatSessionInfoRequest.pageSize + pageSizeStepSize),
+                    },
                     chatSessionInfoList: chatSessionConfigPage?.records ?? [],
                 }))
             },
@@ -450,12 +457,17 @@ export const useAllChatSessionStore = create<State & Action>(
                 if (!state) return [];
                 return state.chatSessionInfoList;
             },
+            getChatSessionInfoLength: () => {
+                const state = getState();
+                if (!state || !state.chatSessionInfoList) return 0;
+                return state.chatSessionInfoList.length;
+            },
             clearChatSessionInfoList: () =>{
                 setState(({
                     curSelectChatSessionId: "",
                     chatSessionInfoRequest: {
                         current: 1,
-                        pageSize: 25,
+                        pageSize: pageSizeStepSize,
                     },
                     chatSessionInfoList: [],
                 }))

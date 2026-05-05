@@ -11,6 +11,9 @@ import {LoginContainer} from "./components/basic/loginContainer.tsx";
 import {AlertProvider} from "./hooks/AlertContext.tsx";
 import {PptxPreviewContainer} from "./components/dashboard/ui/chatContainer/chatBoard/pptx/pptxPreviewContainer.tsx";
 import {DocxPreviewContainer} from "./components/dashboard/ui/chatContainer/chatBoard/docx/DocxPreviewContainer.tsx";
+import {
+    ChatSessionSearchContainer
+} from "./components/dashboard/ui/chatContainer/chatBoard/search/ChatSessionSearchContainer.tsx";
 
 export const App = () => {
     const {setStyleVariable} = useBasicConfigStore();
@@ -52,6 +55,7 @@ export const App = () => {
                 <LoginContainer isOpen={loginModelIsOpen} onClose={() => setLoginModelIsOpen(false)} />
                 <PptxPreviewContainer />
                 <DocxPreviewContainer />
+                <ChatSessionSearchContainer />
             </AlertProvider>
         </div>
     )

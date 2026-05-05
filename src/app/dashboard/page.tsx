@@ -14,9 +14,10 @@ export const DashBoard: React.FC<DashBoardProps> = ({
 
     const [leftAsideIsExpand, setLeftAsideIsExpand] = useState(false);
 
-    const {queryChatSessionInfoList} = useAllChatSessionStore();
+    const {queryChatSessionInfoList, clearChatSessionInfoList} = useAllChatSessionStore();
 
     useEffect(() => {
+        clearChatSessionInfoList();
         queryChatSessionInfoList();
     }, []);
 
